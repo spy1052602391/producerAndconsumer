@@ -1,0 +1,68 @@
+package 生产者消费者模型;
+
+class Goods{
+    private String goodsName;
+    private int count;
+    //生成商品方法
+    public synchronized void set(String goodsName){
+        //多线程用while，  如果只用if会同时唤醒多个等待的线程
+        if(this.count>0){
+            System.out.println("商品充足，休息休息");
+            try {
+                this.wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        this.goodsName = goodsName;
+        this.count++;
+        System.out.println(Thread.currentThread().getName()+"、"+"生产、"+this.goodsName+"、数量为："+count);
+        this.notify();
+    }
+    //消费商品方法
+    public synchronized void get(){
+        if(count == 0){
+            System.out.println("商品卖完了，稍等一下");
+            try {
+                this.wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        this.count--;
+        System.out.println(Thread.currentThread().getName()+"、"+"消费、"+this.goodsName);
+        this.notify();
+    }
+}
+
+//消费者线程
+class consumer implements Runnable{
+    Goods goods;
+
+    public consumer(Goods goods) {
+        this.goods = goods;
+    }
+
+    public void run(){
+        this.goods.get();
+    }
+}
+//生产者线程
+class producer implements Runnable{
+    Goods goods;
+    public producer(Goods goods) {
+        this.goods = goods;
+    }
+    public void run(){
+        this.goods.set("华为手机");
+    }
+}
+public class Test {
+    public static void main(String[] args) {
+        Goods goods = new Goods();
+        Thread thread1 = new Thread(new consumer(goods),"消费者");
+        Thread thread2 = new Thread(new producer(goods),"生产者");
+        thread1.start();
+        thread2.start();
+    }
+}
